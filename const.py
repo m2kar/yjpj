@@ -9,7 +9,7 @@
 @Time: 11:46
 @License: GPL
 """
-
+import sys
 #databse
 database_filename='database.db'
 
@@ -21,10 +21,15 @@ headers = {
                   'Chrome/56.0.2924.87 Safari/537.36'
 }
 
+#mail setting
+IMAPHOST= 'imap.sina.com'
+SMTPHOST="smtp.sina.com"
+MAILUSERNAME= "yjpj_service"
+MAILPASSWORD= "rzq123"
 
-def main():
-    pass
-
-
-if __name__ == '__main__':
-    main()
+if sys.platform == 'win32':
+    LOGFILE="./jwpj.log"
+    ERRLOGFILE="./jwpj_err.log"
+else:
+    LOGFILE="/home/bae/log/jwpj.log"
+    LOGFILE = "/home/bae/log/jwpj_err.log"
