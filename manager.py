@@ -19,7 +19,7 @@ def loop_process_order(q):
         logging.debug("q.get start")
         info=q.get()
         logging.debug("q.get end  %s"%info['student_id'])
-        logging.info("处理订单:获取到" + str(info))
+        logging.info("start process order : %s " % str(info))
         process_order.process_order(info)
 
 if __name__ == '__main__':

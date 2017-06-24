@@ -50,7 +50,12 @@ def send(address,subject,content,From=const.MAILUSERNAME + "@sina.com"):
             login()
         else:
             break
-    s.close()
+    try:
+        s.close()
+    except smtplib.SMTPException,e:
+        logging.error("smtp close fail ,%s"%e.message)
+        s=Null
+        
     # server.sendmail(From,[address,],message)
 
 

@@ -45,7 +45,7 @@ class mailbox():
                 logging.ERROR("IMAP登录失败 " + str(e))
                 time.sleep(10)
             except BaseException,e:
-                logging.ERROR("IMAP登录失败 %s",e.message)
+                logging.ERROR("IMAP登录失败 %s"%e.message)
             else:
                 break
 
