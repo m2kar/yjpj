@@ -10,6 +10,10 @@
 @License: GPL
 """
 import sys
+
+if not sys.platform == 'win32':
+    sys.path.append('/home/bae/app/deps')
+
 #databse
 database_filename='database.db'
 
@@ -31,5 +35,5 @@ if sys.platform == 'win32':
     LOGFILE="./jwpj.log"
     ERRLOGFILE="./jwpj_err.log"
 else:
-    LOGFILE="/home/bae/log/jwpj.log"
-    LOGFILE = "/home/bae/log/jwpj_err.log"
+    LOGFILE="/home/bae/logs/jwpj.log"
+    LOGFILE = "/home/bae/logs/jwpj_err.log"
