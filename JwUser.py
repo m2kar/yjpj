@@ -96,7 +96,7 @@ class JwglUser():
             raise const.NetworkError
         else:
             if resp.text.find('"status":"success"') == -1:
-                print(data['yhm'], data['mm'], resp.text)
+                logging.error("%s %s %s" %(data['yhm'], data['mm'], resp.text.decode()))
                 raise const.LoginError
             else:
                 return const.NoError
@@ -104,10 +104,10 @@ class JwglUser():
     def login(self):
         '''登陆,获取cookie'''
         if not self.user_id:
-            print('invalid user id')
+            logging.error('invalid user id')
             raise const.LoginError
         if not self.passwd:
-            print('invalid user passwd')
+            logging.error('invalid user passwd')
             raise const.LoginError
         try:
             self.check_user_passwd()
@@ -123,7 +123,7 @@ class JwglUser():
         except KeyboardInterrupt:
             raise
         except Exception as e:
-            print('login error ', e)
+            logging.error('login error %s '% e.message)
             raise const.LoginError
         else:
             if self.is_login():
@@ -180,7 +180,7 @@ class JwglUser():
             if each_teacher['status'] != u'提交':
                 logging.debug("%s:%s %s"%(self.user_id,each_teacher['teacher_name'], each_teacher['kc_name']))
                 while not self.send_submit_pj(each_teacher):
-                    print(each_teacher['teacher_name'], each_teacher['kc_name'], u'重试')
+                    logging.error( "%s %s %s"%(each_teacher['teacher_name'], each_teacher['kc_name'], u'重试'))
 
         # 多线程处理
         pool = MultiPool()
@@ -332,7 +332,7 @@ class JwglTeacher(JwglUser):
         except KeyboardInterrupt:
             raise
         except Exception as e :
-            print('get_kcb_detail:request post',e)
+            logging.error('get_kcb_detail:request post %s'%e.message)
             raise const.NetworkError
 
         try:
@@ -340,7 +340,7 @@ class JwglTeacher(JwglUser):
         except KeyboardInterrupt:
             raise
         except Exception as e:
-            print(' get_kcb_detail:json',e)
+            logging.error(' get_kcb_detail:json %s'%e.message)
             raise const.JsonError
         return retval
 
@@ -351,7 +351,7 @@ class JwglTeacher(JwglUser):
             try:
                 each_detail = self.get_kcb_detail(info)
             except (const.NetworkError, const.JsonError) as e:
-                print(e, info['jgh'])
+                logging.error("%s %s" %(e, info['jgh']))
                 trycount -= 1
             else:
                 print(each_detail['kbList'])
@@ -477,7 +477,7 @@ def writefile(text,filename='all_xs_detail.json',sep='\n'):
 
 
 def main():
-    stu1=JwglUser("1451914","a62285079")
+    stu1=JwglUser("1452110","sw19961003seven")
     try:
         stu1.check_user_passwd()
     except const.LoginError:

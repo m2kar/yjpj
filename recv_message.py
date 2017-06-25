@@ -18,7 +18,7 @@ from io import StringIO
 from backports import ssl
 
 
-import database
+# import database
 import const
 from log import logging
 
@@ -41,11 +41,11 @@ class mailbox():
                 self.server.login(self.username, self.password)
             except KeyboardInterrupt:
                 raise
-            except TypeError, e:
-                logging.ERROR("IMAP登录失败 " + str(e))
+            except TypeError as e:
+                logging.error("IMAP登录失败 " + str(e))
                 time.sleep(10)
-            except BaseException,e:
-                logging.ERROR("IMAP登录失败 %s",e.message)
+            except Exception as e:
+                logging.error("IMAP登录失败 %s"%e.message)
             else:
                 break
 
@@ -95,7 +95,7 @@ class mailbox():
         valuetable = root.xpath('/html/body/table/tr/td/table/tr[2]/td/table/tr[3]/td/table')[0]
         info['student_id']=valuetable.xpath("tr[1]/td[2]")[0].text.strip()
         info['passwd']=valuetable.xpath("tr[2]/td[2]")[0].text.strip()
-        info['email']=valuetable.xpath("tr[3]/td[2]")[0].text.strip()
+        info['email']=valuetable.xpath("tr[3]/td[2]/div/p")[0].text.strip()
         return info
 
     def save(self,content,parser):
@@ -133,8 +133,11 @@ def recv_to_queue(q):
             m.receive_payment()
         except KeyboardInterrupt:
             raise
-        except Exception,e:
-            m.server.logout()
+        except Exception as e:
+            try:
+                m.server.logout()
+            except Exception as e2:
+                logging.error("imap logout error %s"%e2.message)
             m=mailbox(q)
         logging.debug("等待下一次接收邮件")
         time.sleep(10)
