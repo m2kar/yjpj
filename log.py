@@ -22,6 +22,13 @@ formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
+infolog=logging.FileHandler(const.INFOLOGFILE)
+infolog.setLevel(logging.INFO)
+errformatter=logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
+infolog.setFormatter(errformatter)
+logging.getLogger('').addHandler(infolog)
+
+
 errlog=logging.FileHandler(const.ERRLOGFILE)
 errlog.setLevel(logging.WARNING)
 errformatter=logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')

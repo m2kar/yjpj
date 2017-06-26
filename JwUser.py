@@ -1,56 +1,21 @@
 # -*- coding: utf-8 -*- 
 """
-
+教务系统的用户登录刷分等  这是核心功能
 """
 #   @Time:  2017/6/23 1:00
 #   @Author:still_night@163.com
 #   @File:  JwUser.py
 from __future__ import unicode_literals
 
+import const
 import requests
 from bs4 import BeautifulSoup
-from multiprocessing.dummy import Pool as MultiPool
+from threadpool import makeRequests,ThreadPool
+# from multiprocessing.dummy import Pool as MultiPool
 import json
 import time
 import random
 from log import logging
-class const():
-    '''一些常量'''
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko)'
-                      ' Chrome/55.0.2883.87 Safari/537.36'
-
-    }
-    '''下面是一些链接'''
-    main_url = r'http://202.118.40.67/jwglxt/'  # 教务系统的根目录
-    login_page = main_url + 'xtgl/login_login.html'  # 登陆页面
-    login_check_page = main_url + 'xtgl/login_cxCheckYh.html'  # 登陆检查
-    change_password_page = main_url + 'xtgl/mmgl_xgMm.html'  # change password
-    user_info_page = main_url + 'xtgl/index_cxYhxxIndex.html'  # 用户信息
-    pj_index_url = main_url + 'xtgl/xspj_cxXspjIndex.html'  # 评价教师列表
-    pj_detail_page = main_url + 'xspjgl/xspj_cxXspjDisplay.html'  # 评价的详情页
-    pj_save_page = main_url + 'xspjgl/xspj_bcXspj.html'  # 保存评价的posturl
-    pj_submit_page = main_url + 'xspjgl/xspj_tjXspj.html'  # 提交评价的posturl
-    # pj_subpage='http://202.118.40.67/jwglxt/xspjgl/xspj_cxXspjDisplay.html'
-    pj_gnkey = 'N4010'  # 评价的功能号
-
-    get_kcb_index_page = main_url + 'kbdy/jskbdy_cxJskbdyList.html'
-    get_kcb_detail_page=main_url+'kbdy/jskbdy_cxJsKb.htm'
-
-    class LoginError(BaseException):
-        '''登陆错误'''
-        pass
-
-    class NetworkError(BaseException):
-        pass
-
-    class JsonError(BaseException):
-        pass
-
-    class ChangePasswordError(BaseException):
-        pass
-
-    NoError = None
 
 
 class JwglUser():
@@ -76,6 +41,28 @@ class JwglUser():
             'sessionUserKey': self.user_id
         }
 
+    def is_password_valid(self):
+        passwd_valid=False
+        retry=3
+        while retry>0:
+            retry-=1
+            try:
+                value=self.check_user_passwd()
+            except const.LoginError:
+                passwd_valid = False
+                break
+            except:
+                pass
+            else:
+                if value==const.NoError:
+                    passwd_valid=True
+                    break
+            finally:
+                self.req.close()
+        else:
+            raise const.NetworkError
+        return passwd_valid
+
     def check_user_passwd(self,user_id=None,passwd=None):
         '''登陆检查,用户名和密码是否正确'''
 
@@ -96,7 +83,7 @@ class JwglUser():
             raise const.NetworkError
         else:
             if resp.text.find('"status":"success"') == -1:
-                logging.error("%s %s %s" %(data['yhm'], data['mm'], resp.text.decode()))
+                logging.error("%s %s %s" %(data['yhm'], data['mm'], resp.text))
                 raise const.LoginError
             else:
                 return const.NoError
@@ -183,8 +170,15 @@ class JwglUser():
                     logging.error( "%s %s %s"%(each_teacher['teacher_name'], each_teacher['kc_name'], u'重试'))
 
         # 多线程处理
-        pool = MultiPool()
-        pool.map(__pj_act, all_teacher_info)
+        # pool = MultiPool()
+        # pool.map(__pj_act, all_teacher_info)
+        pool=ThreadPool(8)
+        pj_reqs=makeRequests(__pj_act,all_teacher_info)
+        [pool.putRequest(req) for req in pj_reqs]
+        pool.wait()
+
+        # for each in all_teacher_info:
+        #     __pj_act(each)
         # for each_teacher in all_teacher_info:
         #     if each_teacher['status']!='提交':
         #         print(each_teacher['teacher_name'],each_teacher['kc_name'])
@@ -290,179 +284,6 @@ class JwglUser():
 
         return postform
 
-
-class JwglTeacher(JwglUser):
-    def get_all_kcb_index(self, curent_page=1, show_count=99999):
-        params = self.default_params.copy()
-        params['gnmkdmKey'] = 'N214510'
-        data = {'_search': 'false',
-                'jg_id': '',
-                'jgh': '',
-                'nd': '1487260366538',
-                'queryModel.currentPage': str(curent_page),
-                'queryModel.showCount': str(show_count),  # 设为最大
-                'queryModel.sortName': 'jgh',
-                'queryModel.sortOrder': 'asc',
-                'time': '15',
-                'xnm': '2016',
-                'xqh_id': '',
-                'xqm': '3',
-                'zcmc': ''}
-        response = self.req.post(const.get_kcb_index_page, params=params, data=data)
-        return json.loads(response.text)
-
-    def get_kcb_detail(self, info):
-        params = self.default_params.copy()
-        params['gnmkdmKey'] = 'N214510'
-        data = {'jgh': info['jgh'],
-                'jgh_id': info['jgh_id'],
-                'jgmc': '',
-                'xm': info['xm'],
-                'xnm': info['xnm'],
-                'xnmc': info['xnmc'],
-                'xqh_id': info['xqh_id'],
-                'xqm': info['xqm'],
-                'xqmmc': info['xqmmc']
-                }
-        try:
-            # response=self.req.post(const.get_kcb_detail_page,params=params,data=data)
-            response=self.req.post('http://202.118.40.67/jwglxt/kbdy/jskbdy_cxJsKb.html?gnmkdmKey=N214510&sessionUserKey=20101175',data=data)
-            if response.status_code==404:
-                raise const.NetworkError
-        except KeyboardInterrupt:
-            raise
-        except Exception as e :
-            logging.error('get_kcb_detail:request post %s'%e.message)
-            raise const.NetworkError
-
-        try:
-            retval = json.loads(response.text)
-        except KeyboardInterrupt:
-            raise
-        except Exception as e:
-            logging.error(' get_kcb_detail:json %s'%e.message)
-            raise const.JsonError
-        return retval
-
-    def __act_all_kcb_detail(self,info):
-        trycount = 3
-        while trycount > 0:
-            time.sleep(random.randint(0, 100) / 1000)
-            try:
-                each_detail = self.get_kcb_detail(info)
-            except (const.NetworkError, const.JsonError) as e:
-                logging.error("%s %s" %(e, info['jgh']))
-                trycount -= 1
-            else:
-                print(each_detail['kbList'])
-                writefile(str(each_detail['kbList'])[1:-1],sep=',\n')
-                break
-
-
-    def get_all_kcb_detail(self):
-        # all=self.get_all_kcb_index()
-        all=json.load(open('all_teacher_2016.json',encoding='utf-8'))
-        # all_detail=json.loads('{}')
-        # all_detail['items']=[]
-        writefile("{'items':[")
-        pool=MultiPool(5)
-        pool.map(self.__act_all_kcb_detail,all['items'])
-        writefile("]}")
-        # for info in all['items']:
-        # all_detail['count']=len(all_detail['items'])
-        return const.NoError
-
-
-    def __act_all_jxb_xs_list(self,info):
-        trycount = 3
-        while trycount > 0:
-            time.sleep(random.randint(0, 100) / 1000)
-            try:
-                each_jxb_xs_list = self.get_jxb_xs_list(info['jxb_id'])
-            except (const.NetworkError, const.JsonError) as e:
-                print(e, info['jxbzc'])
-                trycount -= 1
-            else:
-                print(each_jxb_xs_list)
-                writefile("'%s' : %s" %( info['jxb_id'],str(each_jxb_xs_list)),sep=',\n')
-                break
-
-    # def get_all_jxb_xs_list(self):
-    #     # all=self.get_all_kcb_index()
-    #     # all=json.load(open('all_teacher_2016.json',encoding='utf-8'))
-    #     from  cmujw2.all_jxb import all_jxb_list
-    #     # all_detail=json.loads('{}')
-    #     # all_detail['items']=[]
-    #     writefile("{")
-    #     pool=MultiPool(5)
-    #     pool.map(self.__act_all_jxb_xs_list,all_jxb_list)
-    #     writefile("}")
-    #     # for info in all['items']:
-    #     # all_detail['count']=len(all_detail['items'])
-    #     return const.NoError
-
-
-    def get_jxb_xs_list(self,jxb_id,xnm='2016',xqm='3'):
-        xcb_page = 'http://202.118.40.67/jwglxt/xsxkjk/xsxkcx_cxJxbxsList.html?' \
-                   'doType=query&gnmkdmKey=N255005&sessionUserKey=20101175'
-        params={
-            'doType':'query',
-            'gnmkdmKey':'N255005',
-            'sessionUserKey':'20101175'
-        }
-        data={'_search': 'false',
-         # 'jxb_id': '3CC54FBDEE80B3C2E05342C7A8C0534E',
-         'jxb_id': jxb_id,
-         'nd': '1487309019364',
-         'queryModel.currentPage': '1',
-         'queryModel.showCount': '100000',
-         'queryModel.sortName': 'xh desc,bj,xm',
-         'queryModel.sortOrder': 'asc',
-         'time': '1',
-         'xnm': xnm,
-         'xqm': xqm}
-        try:
-            response=self.req.post(xcb_page,data=data)
-            if response.status_code==404:
-                raise const.NetworkError
-        except KeyboardInterrupt:
-            raise
-        except Exception as e:
-            raise const.NetworkError
-        else:
-            try:
-                retval=json.loads(response.text)
-            except KeyboardInterrupt:
-                raise
-            except Exception as e :
-                raise const.JsonError
-            else:
-                return retval
-
-    def get_person_info(self):
-        info_page=const.main_url + 'jsxx/jsgrxx_cxJsgrxx.html'
-        gnKey='N1585'
-        params={
-            '_t':'1487314394930',
-            'gnmkdmKey': gnKey,
-            'sessionUserKey':self.user_id
-        }
-        data={
-            'gnmkdm':gnKey,
-            'czdmKey':'00'
-        }
-        try:
-            response=self.req.post(info_page,params=params,data=data)
-            if response.status_code==404:
-                raise const.NetworkError
-        except KeyboardInterrupt:
-            raise
-        except Exception as e:
-            raise const.NetworkError
-        else:
-            return response.text
-
-
 filelock=[False]
 def writefile(text,filename='all_xs_detail.json',sep='\n'):
     while filelock[0] == True:
@@ -477,7 +298,7 @@ def writefile(text,filename='all_xs_detail.json',sep='\n'):
 
 
 def main():
-    stu1=JwglUser("1452110","sw19961003seven")
+    stu1 = JwglUser("<userid>", "<userpass>")
     try:
         stu1.check_user_passwd()
     except const.LoginError:
@@ -485,30 +306,7 @@ def main():
     else:
         print ("password true")
         stu1.pj_all_teacher()
-    # stu_info = ('1471112', 'a643926926')
-    # jgh='19991070'
-    # jgmm='qwerty123456'
-    # t1 = JwglTeacher(jgh, jgmm)
-    # t1.login()
-    # all_detail=t1.get_all_jxb_xs_list()
 
-    # stu1=Jwgl_user('132601','rzq123')
-    # stu1 = Jwgl_user(stu_info[0], stu_info[1])
-    # adict=stu1.get_pj_post_form(subpage)
-    # for key in sorted(adict.keys()):
-    #     print(key+':'+adict[key])
-    # stu1.login()
-    # stu1.pj_all_teacher()
-    # print(stu1.req.cookies)
-    # infos=stu1.get_pj_index()
-    # print(infos)
-    # info1=infos[32]
-    # print(stu1.send_save_pj(info1))
-    # print(stu1.get_pj_subpage(info1).text)
-    # subpage=stu1.get_pj_subpage(info1)
-    # print(subpage.text)
-    # # stu1.get_pj_subpage(info1).text
-    'http://202.118.40.67/jwglxt/xsxkjk/xsxkcx_cxJxbxsList.html?doType=query&gnmkdmKey=N255005&sessionUserKey=20101175'
 
 
 if __name__ == "__main__":

@@ -1,39 +1,24 @@
-BAE3.0新增了worker类型的应用，那么到底该如何使用worker类型？它能用在什么地方了？
+本程序基于Python 编写,用于新版正方教务系统的教务评价
+程序分为如下模块:
+    manager.py          用于整体管理程序的运行
 
-传统的WEB类型，主要用来创建WEB应用；这种应用的特点是通过HTTP请求来驱动应用逻辑；但有时候我们需要长期在后台跑一些任务，例如爬虫，不停的去爬取各种网络资源，通过WEB类型就不好实现了。
+    recv_info.py        接收用于订单和管理员的工单
+                        此模块基于www.mikecrm.com 的表单服务,从通知邮件中解析获取用户信息
+                        通知邮件分为两个文件夹"yjpj_payment"(订单) 和 "work_order" (工单)
 
-worker类型最适合的就是用来创建需要长期在后台运行任务的应用。
+    process_order.py    对用户的订单进行处理,包括检查密码是否正确和进行刷评价
+                        调用send_mail进行通知的推送
 
+    JwUser.py           教务系统的处理,检测密码,刷评价,以及其他可拓展的功能 是最核心的模块,
 
-BAE3.0里面，通过 supervisor 来管理worker类型的应用；在你的应用的根目录下，需要放置一个名字为 ‘supervisord.conf’ 的配置文件，supervisor守护进程会按照这个配置文件来启动进程，并在进程出现异常退出的情况下进行重启。下面举个例子来看下这个配置文件有哪些配置项：
+    send_mail.py        发送邮件的模块
 
-[program: spider]
-command = python /home/bae/app/spider.py
-numprocess = 2
-autorestart = true
-stdout_logfile = /home/bae/logs/spider.stdout.log
-stderr_logfile = /home/bae/logs/spider.stderr.log
+    const.py            常用的设置项,需要根据需要更改
 
-[program: foo]
-command = python /home/bae/app/foo.py
-numprocess = 1
-autorestart = true
-stdout_logfile = /home/bae/logs/foo.stdout.log
-stderr_logfile = /home/bae/logs/foo.stderr.log
-在上面这个例子中，我们指定了两个后台任务 ‘spider’ 和 ‘foo’：
+    log.py              设置日志
 
-第一个任务是执行 /home/bae/app/spider.py 这个脚本，并将标准输出和标准出错重定向到 /home/bae/logs 下；’numprocess’ 指定了要创建两个进程， 而 ‘autorestart’ 则表示当进程退出后，会被重新启动。
+    附加的python包在requirement.txt文件
 
-第二个任务是执行 /home/bae/app/foo.py 这个脚本，并将标准输出和标准出错重定向到 /home/bae/logs 下；’numprocess’ 指定了要创建一个进程， 而 ‘autorestart’ 则表示当进程退出后，会被重新启动。
-
-以上是 supervisor.conf 中主要用到的配置项，更完整的配置项请参看 完整的配置文件格式请参看 http://supervisord.org/configuration.html#program-x-section-settings
-
-在 spider.py 或  foo.py 中，我们通常应该实现一个长期循环的任务，例如  foo.py：
-
-import time
-import sys
-
-while True:
-		time.sleep(3)
-		sys.stdout.write("hello python world\n")
-		sys.stdout.flush()
+    使用方法:
+        JwUser 可以直接用于刷评价,对于不同的网站需要在const.py 内更改对应的网址
+        其他的文件根据需要自行更改移植
