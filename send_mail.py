@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 """
-邮件发送模块,用于用户提交后成功或失败的信息反馈
+
 """
 #   @Time:  2017/6/23 1:43
 #   @Author:still_night@163.com
@@ -71,8 +71,9 @@ def send_check_fail(adress,stu_id,password):
         您的教务系统用户名密码有错误.
         学号: %s  
         密码:%s
-        请您回复正确的账号密码给我
-        我的QQ/微信 531903884
+        请您尝试登陆新版正方教务管理平台( http://202.118.40.67/jwglxt/xtgl/dl_loginForward.html )
+        然后回复正确的账号密码给我
+        我的邮箱: yijianpingjiao@foxmail.com 
         感谢支持!
     """% (stu_id,password)
     send(adress,subject,content)
@@ -105,10 +106,32 @@ def send_comment_ok(adress,stu_id,password):
     你好:
         医大一键评教,已经成功帮您完成了教务系统的评价. 
         有问题可以给我回复
-        QQ/微信: 531903884
+        Email: yijianpingjiao@foxmail.com 
         感谢支持,欢迎分享给朋友!
     """
     send(adress, subject, content)
 
 if __name__ == '__main__':
+    # send_check_fail("still_night@163.com","1","2")
+    # send_check_ok("still_night@163.com", "1", "2")
     send_comment_ok("531903884@qq.com", "1", "2")
+    # minfo['server'].close()
+
+# FROM = 'yjpj_service@sina.com'
+# TO = ["still_night@163.com"] # must be a list
+# SUBJECT = "Hello!"
+# TEXT = "This message was sent with Python's smtplib."
+# # Prepare actual message
+# message = """\
+# From: %s
+# To: %s
+# Subject: %s
+# %s
+# """ % (FROM, ", ".join(TO), SUBJECT, TEXT)
+#
+# # Send the mail
+#
+# login()
+# server=minfo['server']
+# server.sendmail(FROM, TO, message)
+# server.quit()

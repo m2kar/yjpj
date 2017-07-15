@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 """
-发送日志到指定邮箱,独立于整体运行
+
 """
 #   @Time:  2017/6/25 10:28
 #   @Author:still_night@163.com
@@ -14,6 +14,7 @@ from email.mime.multipart import MIMEMultipart
 from email.header import Header
 import send_mail
 import os
+
 
 
 def send_log():
@@ -30,13 +31,14 @@ def send_log():
     # 邮件正文内容
     message.attach(MIMEText('日志', 'plain', 'utf-8'))
 
-    for each in ("jwpj_info.log", "jwpj.log", "jwpj_err.log"):
-        # 构造附件1，传送当前目录下的 test.txt 文件
-        att = MIMEText(open('/root/yjpj/%s' % each, 'rb').read(), 'base64', 'utf-8')
-        att["Content-Type"] = 'application/octet-stream'
-        # 这里的filename可以任意写，写什么名字，邮件中显示什么名字
-        att["Content-Disposition"] = 'attachment; filename="%s"' % each
-        message.attach(att)
+    for each in ("jwpj_info.log","jwpj.log","jwpj_err.log"):
+        if os.path.exists(each):
+            # 构造附件1，传送当前目录下的 test.txt 文件
+            att = MIMEText(open('/root/yjpj/%s'%each, 'rb').read(), 'base64', 'utf-8')
+            att["Content-Type"] = 'application/octet-stream'
+            # 这里的filename可以任意写，写什么名字，邮件中显示什么名字
+            att["Content-Disposition"] = 'attachment; filename="%s.txt"'%each
+            message.attach(att)
 
     try:
         smtpObj = send_mail.login()
@@ -45,7 +47,7 @@ def send_log():
     except smtplib.SMTPException:
         print "Error: 无法发送邮件"
 
-
 if __name__ == '__main__':
     if not sys.platform == "win32":
         send_log()
+

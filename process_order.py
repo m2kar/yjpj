@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 """
-处理订单的的进程,包括检查密码和评论
+
 """
 #   @Time:  2017/6/23 9:49
 #   @Author:still_night@163.com
@@ -13,7 +13,6 @@ import JwUser, const, send_mail
 from log import logging
 
 def comment_order(stuid, passwd, email):
-    """评论教务并将结果发送到用户的邮箱"""
     u = JwUser.JwglUser(stuid, passwd)
     retry = 3
     while retry > 0:
@@ -35,8 +34,6 @@ def comment_order(stuid, passwd, email):
 
 
 def check_password(stuid, passwd, email):
-    """检查密码,如果错误则发送错误信息给用户的邮箱,并返回False
-    如果正确则返回True"""
     u = JwUser.JwglUser(stuid, passwd)
     try:
         passwd_valid = u.is_password_valid()
