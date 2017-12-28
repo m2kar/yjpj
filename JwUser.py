@@ -298,7 +298,7 @@ def writefile(text,filename='all_xs_detail.json',sep='\n'):
 
 
 def main():
-    stu1=JwglUser("1470810","zyzyun111")
+    stu1=JwglUser("1","2")
     try:
         stu1.check_user_passwd()
     except const.LoginError:
@@ -306,14 +306,12 @@ def main():
     else:
         print ("password true")
         stu1.pj_all_teacher()
-    # stu_info = ('1471112', 'a643926926')
-    # jgh='19991070'
-    # jgmm='qwerty123456'
+
     # t1 = JwglTeacher(jgh, jgmm)
     # t1.login()
     # all_detail=t1.get_all_jxb_xs_list()
 
-    # stu1=Jwgl_user('132601','rzq123')
+
     # stu1 = Jwgl_user(stu_info[0], stu_info[1])
     # adict=stu1.get_pj_post_form(subpage)
     # for key in sorted(adict.keys()):
