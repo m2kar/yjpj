@@ -477,7 +477,7 @@ def writefile(text,filename='all_xs_detail.json',sep='\n'):
 
 
 def main():
-    stu1=JwglUser("1451914","a62285079")
+    stu1=JwglUser("14","")
     try:
         stu1.check_user_passwd()
     except const.LoginError:
@@ -485,30 +485,7 @@ def main():
     else:
         print ("password true")
         stu1.pj_all_teacher()
-    # stu_info = ('1471112', 'a643926926')
-    # jgh='19991070'
-    # jgmm='qwerty123456'
-    # t1 = JwglTeacher(jgh, jgmm)
-    # t1.login()
-    # all_detail=t1.get_all_jxb_xs_list()
-
-    # stu1=Jwgl_user('132601','rzq123')
-    # stu1 = Jwgl_user(stu_info[0], stu_info[1])
-    # adict=stu1.get_pj_post_form(subpage)
-    # for key in sorted(adict.keys()):
-    #     print(key+':'+adict[key])
-    # stu1.login()
-    # stu1.pj_all_teacher()
-    # print(stu1.req.cookies)
-    # infos=stu1.get_pj_index()
-    # print(infos)
-    # info1=infos[32]
-    # print(stu1.send_save_pj(info1))
-    # print(stu1.get_pj_subpage(info1).text)
-    # subpage=stu1.get_pj_subpage(info1)
-    # print(subpage.text)
-    # # stu1.get_pj_subpage(info1).text
-    'http://202.118.40.67/jwglxt/xsxkjk/xsxkcx_cxJxbxsList.html?doType=query&gnmkdmKey=N255005&sessionUserKey=20101175'
+   
 
 
 if __name__ == "__main__":
